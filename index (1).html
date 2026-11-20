@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roblox Profile Lookup - Cek Profil via Username</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+          },
+          colors: {
+            surface: '#F4F6F9',
+          },
+          boxShadow: {
+            soft: '0 4px 24px rgba(15, 23, 42, 0.05)',
+            pill: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      background-color: #F4F6F9;
+      color: #1E293B;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Glassmorphism subtle card effect */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+    }
+
+    /* Shimmer animation for loading skeleton */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Top Ambient Decorative Gradient -->
+  <div class="w-full h-56 bg-gradient-to-b from-[#E6ECF5] via-[#EEF2F7] to-[#F4F6F9] absolute top-0 left-0 -z-10 pointer-events-none"></div>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-[680px] mx-auto px-4 pt-8 pb-12">
+
+    <!-- Header Section -->
+    <header class="text-center mb-6">
+      <div class="inline-flex items-center gap-2 bg-white/90 border border-slate-200/80 shadow-pill px-3.5 py-1.5 rounded-full mb-3">
+        <!-- Roblox Tilted Square SVG Icon -->
+        <svg class="w-4 h-4 text-[#0F172A]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5.4 2L2 18.6 18.6 22 22 5.4 5.4 2zm8.7 12.1l-4.2-.9.9-4.2 4.2.9-.9 4.2z"/>
+        </svg>
+        <span class="text-[11.5px] font-bold tracking-wide text-slate-700 uppercase">Roblox Profile Finder</span>
+      </div>
+      <h1 class="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight">
+        Cek Profil Akun Roblox
+      </h1>
+      <p class="text-[13.5px] text-slate-500 mt-1">
+        Masukkan username Roblox untuk melihat avatar, statistik, dan detail akun secara real-time.
+      </p>
+    </header>
+
+    <!-- Search Card -->
+    <section class="glass-card rounded-2xl shadow-soft p-4 sm:p-5 mb-5">
+      <form id="search-form" onsubmit="handleSearch(event)" class="flex flex-col sm:flex-row gap-2.5">
+        <div class="relative flex-1 flex items-center bg-white border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 rounded-xl px-3.5 py-2.5 transition">
+          <span class="text-slate-400 font-bold text-sm mr-1.5 select-none">@</span>
+          <input
+            id="username-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Ketik username Roblox (contoh: Roblox)"
+            class="w-full text-[14px] font-medium text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent"
+          />
+          <button
+            type="button"
+            id="clear-btn"
+            onclick="clearSearch()"
+            class="hidden text-slate-400 hover:text-slate-600 p-1 rounded-lg transition cursor-pointer"
+            title="Hapus"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          id="search-btn"
+          class="bg-[#16A34A] hover:bg-[#15803D] active:scale-[0.99] text-white font-bold text-[13.5px] px-5 py-2.5 sm:py-0 rounded-xl shadow-xs flex items-center justify-center gap-2 transition cursor-pointer shrink-0"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8.5" cy="8.5" r="5.5"></circle>
+            <line x1="12.5" y1="12.5" x2="17" y2="17"></line>
+          </svg>
+          <span>Cari Profil</span>
+        </button>
+      </form>
+
+      <!-- Quick Example Pills -->
+      <div class="mt-3 flex flex-wrap items-center gap-1.5 text-[11.5px] text-slate-500">
+        <span>Coba cepat:</span>
+        <button type="button" onclick="quickSearch('Roblox')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold transition cursor-pointer">
+          Roblox
+        </button>
+        <button type="button" onclick="quickSearch('Builderman')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold transition cursor-pointer">
+          Builderman
+        </button>
+        <button type="button" onclick="quickSearch('Stickmasterluke')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold transition cursor-pointer">
+          Stickmasterluke
+        </button>
+      </div>
+    </section>
+
+    <!-- Error Alert Box -->
+    <div id="error-box" class="hidden glass-card border-red-200 bg-red-50/90 rounded-2xl p-4 mb-5 flex items-start gap-3">
+      <div class="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
+        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div>
+        <h3 id="error-title" class="text-[13.5px] font-bold text-red-800">Username Tidak Ditemukan</h3>
+        <p id="error-desc" class="text-[12px] text-red-600 mt-0.5 leading-relaxed">
+          Pastikan penulisan username Roblox sudah benar dan tidak mengandung spasi berlebih.
+        </p>
+      </div>
+    </div>
+
+    <!-- Loading Skeleton State -->
+    <section id="loading-skeleton" class="hidden glass-card rounded-2xl shadow-soft p-5 sm:p-6">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+        <div class="w-28 h-28 rounded-2xl skeleton shrink-0"></div>
+        <div class="flex-1 w-full space-y-3 text-center sm:text-left">
+          <div class="h-6 w-44 skeleton rounded-lg mx-auto sm:mx-0"></div>
+          <div class="h-4 w-28 skeleton rounded-lg mx-auto sm:mx-0"></div>
+          <div class="flex justify-center sm:justify-start gap-2 pt-1">
+            <div class="h-7 w-24 skeleton rounded-lg"></div>
+            <div class="h-7 w-28 skeleton rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-6">
+        <div class="h-16 skeleton rounded-xl"></div>
+        <div class="h-16 skeleton rounded-xl"></div>
+        <div class="h-16 skeleton rounded-xl"></div>
+      </div>
+      <div class="mt-5 space-y-2">
+        <div class="h-4 w-32 skeleton rounded"></div>
+        <div class="h-16 w-full skeleton rounded-xl"></div>
+      </div>
+    </section>
+
+    <!-- Profile Result Card -->
+    <section id="profile-card" class="hidden glass-card rounded-2xl shadow-soft overflow-hidden transition-all">
+
+      <!-- Top Banner Strip -->
+      <div class="h-20 bg-gradient-to-r from-slate-800 via-slate-700 to-emerald-800 relative">
+        <!-- Banned Warning Ribbon if account is terminated -->
+        <div id="banned-badge" class="hidden absolute top-3 left-4 bg-red-600 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
+          Akun Dinonaktifkan / Banned
+        </div>
+
+        <!-- Avatar Mode Toggle (Headshot vs Full Body) -->
+        <div class="absolute top-3 right-3 bg-black/35 backdrop-blur-md p-1 rounded-xl flex items-center gap-1 border border-white/15">
+          <button
+            type="button"
+            id="btn-mode-headshot"
+            onclick="switchAvatarMode('headshot')"
+            class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer"
+          >
+            Headshot
+          </button>
+          <button
+            type="button"
+            id="btn-mode-full"
+            onclick="switchAvatarMode('full')"
+            class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-white/85 hover:text-white transition cursor-pointer"
+          >
+            Full Body
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Main Body -->
+      <div class="px-5 sm:px-6 pb-6">
+        <!-- Avatar + Name Header -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-12 relative z-10">
+          <div class="flex flex-col sm:flex-row items-center sm:items-end gap-4 text-center sm:text-left">
+            <!-- Avatar Box -->
+            <div class="relative w-28 h-28 rounded-2xl bg-slate-100 border-4 border-white shadow-md overflow-hidden flex items-center justify-center shrink-0">
+              <img
+                id="avatar-img"
+                src=""
+                alt="Roblox Avatar"
+                class="w-full h-full object-contain transition-opacity duration-200"
+              />
+            </div>
+
+            <!-- Display Name & @username -->
+            <div class="pb-0.5">
+              <div class="flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+                <h2 id="display-name" class="text-xl sm:text-[22px] font-extrabold text-slate-900 leading-tight">
+                  Display Name
+                </h2>
+                <!-- Roblox Official Verified Blue Badge SVG -->
+                <span id="verified-badge" class="hidden" title="Akun Terverifikasi Roblox">
+                  <svg class="w-5 h-5 text-[#00A2FF]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L14.8 4.2L18.4 3.8L19.6 7.2L22.6 9.2L21.6 12.6L22.6 16L19.6 18L18.4 21.4L14.8 21L12 23.2L9.2 21L5.6 21.4L4.4 18L1.4 16L2.4 12.6L1.4 9.2L4.4 7.2L5.6 3.8L9.2 4.2L12 2ZM10.4 16.2L17.2 9.4L15.8 8L10.4 13.4L8.2 11.2L6.8 12.6L10.4 16.2Z"/>
+                  </svg>
+                </span>
+              </div>
+
+              <div class="flex items-center justify-center sm:justify-start gap-2 mt-1 flex-wrap">
+                <span id="user-handle" class="text-[13.5px] font-semibold text-slate-500">@username</span>
+
+                <!-- Presence / Online Status Badge -->
+                <span id="presence-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+                  <span id="presence-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                  <span id="presence-text">Offline</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons: Copy ID & Open Roblox -->
+          <div class="flex items-center justify-center sm:justify-end gap-2 pt-1 sm:pt-0">
+            <button
+              type="button"
+              onclick="copyUserId()"
+              class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-[12px] font-bold transition cursor-pointer"
+              title="Salin User ID"
+            >
+              <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M7 3.5A1.5 1.5 0 018.5 2h3.879a1.5 1.5 0 011.06.44l3.122 3.12A1.5 1.5 0 0117 6.622V12.5a1.5 1.5 0 01-1.5 1.5h-1v-3.379a3 3 0 00-.879-2.121L10.5 5.379A3 3 0 008.379 4.5H7v-1z" />
+                <path d="M4.5 6A1.5 1.5 0 003 7.5v9A1.5 1.5 0 004.5 18h7a1.5 1.5 0 001.5-1.5v-5.879a1.5 1.5 0 00-.44-1.06L9.44 6.439A1.5 1.5 0 008.378 6H4.5z" />
+              </svg>
+              <span>ID: <span id="user-id-text">0</span></span>
+            </button>
+
+            <a
+              id="roblox-profile-link"
+              href="https://www.roblox.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[12px] font-bold transition"
+            >
+              <span>Buka di Roblox</span>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- 3 Stats Boxes: Friends, Followers, Following -->
+        <div class="grid grid-cols-3 gap-3 mt-6">
+          <div class="bg-[#F8FAFC] border border-slate-200/80 rounded-xl p-3.5 text-center">
+            <div id="stat-friends" class="text-lg sm:text-xl font-extrabold text-slate-900">-</div>
+            <div class="text-[11.5px] font-semibold text-slate-500 mt-0.5">Friends</div>
+          </div>
+
+          <div class="bg-[#F8FAFC] border border-slate-200/80 rounded-xl p-3.5 text-center">
+            <div id="stat-followers" class="text-lg sm:text-xl font-extrabold text-slate-900">-</div>
+            <div class="text-[11.5px] font-semibold text-slate-500 mt-0.5">Followers</div>
+          </div>
+
+          <div class="bg-[#F8FAFC] border border-slate-200/80 rounded-xl p-3.5 text-center">
+            <div id="stat-following" class="text-lg sm:text-xl font-extrabold text-slate-900">-</div>
+            <div class="text-[11.5px] font-semibold text-slate-500 mt-0.5">Following</div>
+          </div>
+        </div>
+
+        <!-- Account Info & Bio -->
+        <div class="mt-5 space-y-3.5">
+          <!-- Join Date Row -->
+          <div class="flex items-center justify-between bg-[#F8FAFC] border border-slate-200/80 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-2 text-slate-600 text-[12.5px] font-semibold">
+              <svg class="w-4 h-4 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd" />
+              </svg>
+              <span>Tanggal Bergabung</span>
+            </div>
+            <span id="created-date" class="text-[12.5px] font-bold text-slate-800">-</span>
+          </div>
+
+          <!-- Bio / Description Box -->
+          <div class="bg-[#F8FAFC] border border-slate-200/80 rounded-xl p-4">
+            <div class="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              Deskripsi / Bio
+            </div>
+            <p id="user-bio" class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line break-words">
+              Tidak ada deskripsi profil.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Subtle Footer -->
+  <footer class="text-center py-5 text-[11.5px] text-slate-400">
+    Menggunakan Roblox Public API • Data diambil secara langsung
+  </footer>
+
+  <!-- Toast Feedback -->
+  <div
+    id="toast"
+    class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2"
+  >
+    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toast-text">Tersalin!</span>
+  </div>
+
+  <script>
+    // State penyimpanan data profil aktif
+    let currentProfile = {
+      userId: null,
+      headshotUrl: '',
+      fullBodyUrl: '',
+      avatarMode: 'headshot'
+    };
+
+    const inputEl = document.getElementById('username-input');
+    const clearBtn = document.getElementById('clear-btn');
+
+    // Tampilkan tombol clear saat user mengetik
+    inputEl.addEventListener('input', () => {
+      clearBtn.classList.toggle('hidden', inputEl.value.trim().length === 0);
+    });
+
+    function clearSearch() {
+      inputEl.value = '';
+      clearBtn.classList.add('hidden');
+      inputEl.focus();
+    }
+
+    function quickSearch(username) {
+      inputEl.value = username;
+      clearBtn.classList.remove('hidden');
+      fetchRobloxProfile(username);
+    }
+
+    function handleSearch(e) {
+      e.preventDefault();
+      const username = inputEl.value.trim();
+      if (!username) {
+        showToast('Masukkan username Roblox terlebih dahulu.');
+        inputEl.focus();
+        return;
+      }
+      fetchRobloxProfile(username);
+    }
+
+    /**
+     * Helper Fetch dengan fallback CORS Proxy otomatis.
+     * Mencoba request langsung ke API Roblox terlebih dahulu, lalu otomatis fallback
+     * ke corsproxy.io / allorigins jika browser memblokir CORS.
+     */
+    async function fetchRobloxAPI(url, options = {}) {
+      const isPost = (options.method || 'GET').toUpperCase() === 'POST';
+
+      // 1. Percobaan langsung ke endpoint resmi Roblox
+      try {
+        const directRes = await fetch(url, options);
+        if (directRes.ok) {
+          return await directRes.json();
+        }
+      } catch (_) {
+        // Lanjut ke fallback CORS proxy jika diblokir browser
+      }
+
+      // 2. Fallback 1: corsproxy.io (mendukung GET & POST)
+      try {
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        const proxyRes = await fetch(proxyUrl, options);
+        if (proxyRes.ok) {
+          return await proxyRes.json();
+        }
+      } catch (_) {
+        // Lanjut ke fallback berikutnya
+      }
+
+      // 3. Fallback 2: allorigins.win (untuk GET requests)
+      if (!isPost) {
+        const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const aoRes = await fetch(allOriginsUrl);
+        if (aoRes.ok) {
+          return await aoRes.json();
+        }
+      }
+
+      throw new Error('Gagal terhubung ke server Roblox.');
+    }
+
+    // Format angka ringkas / pemisah ribuan Indonesia
+    function formatNumber(num) {
+      if (num === null || num === undefined) return '0';
+      return Number(num).toLocaleString('id-ID');
+    }
+
+    // Format tanggal ISO ke Bahasa Indonesia (contoh: 27 Februari 2006)
+    function formatIndonesianDate(isoString) {
+      if (!isoString) return '-';
+      const date = new Date(isoString);
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+
+    // Proses utama pencarian profil
+    async function fetchRobloxProfile(username) {
+      const errorBox = document.getElementById('error-box');
+      const profileCard = document.getElementById('profile-card');
+      const skeleton = document.getElementById('loading-skeleton');
+      const searchBtn = document.getElementById('search-btn');
+
+      // Reset UI ke state loading
+      errorBox.classList.add('hidden');
+      profileCard.classList.add('hidden');
+      skeleton.classList.remove('hidden');
+      searchBtn.disabled = true;
+      searchBtn.classList.add('opacity-75');
+
+      try {
+        // Step 1: Ambil User ID berdasarkan Username via POST /v1/usernames/users
+        const lookupData = await fetchRobloxAPI('https://users.roblox.com/v1/usernames/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            usernames: [username],
+            excludeBannedUsers: false
+          })
+        });
+
+        if (!lookupData.data || lookupData.data.length === 0) {
+          throw new Error('NOT_FOUND');
+        }
+
+        const userBasic = lookupData.data[0];
+        const userId = userBasic.id;
+
+        // Step 2: Ambil semua detail profil, thumbnail, statistik, dan presence secara paralel
+        const [
+          userDetails,
+          headshotData,
+          fullBodyData,
+          friendsData,
+          followersData,
+          followingData,
+          presenceData
+        ] = await Promise.all([
+          fetchRobloxAPI(`https://users.roblox.com/v1/users/${userId}`),
+          fetchRobloxAPI(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=420x420&format=Png&isCircular=false`),
+          fetchRobloxAPI(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=false`).catch(() => null),
+          fetchRobloxAPI(`https://friends.roblox.com/v1/users/${userId}/friends/count`).catch(() => ({ count: 0 })),
+          fetchRobloxAPI(`https://friends.roblox.com/v1/users/${userId}/followers/count`).catch(() => ({ count: 0 })),
+          fetchRobloxAPI(`https://friends.roblox.com/v1/users/${userId}/followings/count`).catch(() => ({ count: 0 })),
+          fetchRobloxAPI('https://presence.roblox.com/v1/presence/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ userIds: [userId] })
+          }).catch(() => null)
+        ]);
+
+        // Simpan URL avatar ke state
+        const headshotUrl = headshotData?.data?.[0]?.imageUrl || 'https://placehold.co/420x420/e2e8f0/475569?text=Avatar';
+        const fullBodyUrl = fullBodyData?.data?.[0]?.imageUrl || headshotUrl;
+
+        currentProfile = {
+          userId,
+          headshotUrl,
+          fullBodyUrl,
+          avatarMode: 'headshot'
+        };
+
+        // Render data ke DOM
+        renderProfileUI(userDetails, friendsData, followersData, followingData, presenceData);
+
+        skeleton.classList.add('hidden');
+        profileCard.classList.remove('hidden');
+      } catch (err) {
+        skeleton.classList.add('hidden');
+        if (err.message === 'NOT_FOUND') {
+          showError(
+            `Username "@${username}" Tidak Ditemukan`,
+            'Akun dengan username tersebut tidak terdaftar di Roblox. Coba periksa kembali ejaannya.'
+          );
+        } else {
+          showError(
+            'Gagal Mengambil Data Profil',
+            'Terjadi gangguan koneksi atau pembatasan jaringan saat menghubungi API Roblox. Silakan coba beberapa saat lagi.'
+          );
+        }
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.classList.remove('opacity-75');
+      }
+    }
+
+    function renderProfileUI(user, friends, followers, following, presence) {
+      // Avatar default ke Headshot
+      switchAvatarMode('headshot');
+
+      // Nama & Handle
+      document.getElementById('display-name').textContent = user.displayName || user.name;
+      document.getElementById('user-handle').textContent = `@${user.name}`;
+      document.getElementById('user-id-text').textContent = user.id;
+
+      // Link ke profil resmi Roblox
+      document.getElementById('roblox-profile-link').href = `https://www.roblox.com/users/${user.id}/profile`;
+
+      // Verified Badge
+      const verifiedEl = document.getElementById('verified-badge');
+      if (user.hasVerifiedBadge) {
+        verifiedEl.classList.remove('hidden');
+      } else {
+        verifiedEl.classList.add('hidden');
+      }
+
+      // Banned Status
+      const bannedEl = document.getElementById('banned-badge');
+      if (user.isBanned) {
+        bannedEl.classList.remove('hidden');
+      } else {
+        bannedEl.classList.add('hidden');
+      }
+
+      // Presence / Status Online (0 = Offline, 1 = Online, 2 = In-Game, 3 = In-Studio)
+      const presenceType = presence?.userPresences?.[0]?.userPresenceType ?? 0;
+      const presenceBadge = document.getElementById('presence-badge');
+      const presenceDot = document.getElementById('presence-dot');
+      const presenceText = document.getElementById('presence-text');
+
+      if (presenceType === 2) {
+        presenceBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700';
+        presenceDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        presenceText.textContent = 'In-Game';
+      } else if (presenceType === 1) {
+        presenceBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-700';
+        presenceDot.className = 'w-2 h-2 rounded-full bg-sky-500';
+        presenceText.textContent = 'Online';
+      } else if (presenceType === 3) {
+        presenceBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700';
+        presenceDot.className = 'w-2 h-2 rounded-full bg-amber-500';
+        presenceText.textContent = 'In-Studio';
+      } else {
+        presenceBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600';
+        presenceDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        presenceText.textContent = 'Offline';
+      }
+
+      // Statistik
+      document.getElementById('stat-friends').textContent = formatNumber(friends?.count ?? 0);
+      document.getElementById('stat-followers').textContent = formatNumber(followers?.count ?? 0);
+      document.getElementById('stat-following').textContent = formatNumber(following?.count ?? 0);
+
+      // Tanggal Bergabung & Bio
+      document.getElementById('created-date').textContent = formatIndonesianDate(user.created);
+      const bioText = (user.description || '').trim();
+      const bioEl = document.getElementById('user-bio');
+      if (bioText) {
+        bioEl.textContent = bioText;
+        bioEl.classList.remove('text-slate-400', 'italic');
+        bioEl.classList.add('text-slate-700');
+      } else {
+        bioEl.textContent = 'Pengguna ini belum menambahkan deskripsi profil.';
+        bioEl.classList.remove('text-slate-700');
+        bioEl.classList.add('text-slate-400', 'italic');
+      }
+    }
+
+    // Toggle tampilan avatar antara Headshot & Full Body
+    function switchAvatarMode(mode) {
+      currentProfile.avatarMode = mode;
+      const img = document.getElementById('avatar-img');
+      const btnHead = document.getElementById('btn-mode-headshot');
+      const btnFull = document.getElementById('btn-mode-full');
+
+      if (mode === 'headshot') {
+        img.src = currentProfile.headshotUrl;
+        btnHead.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
+        btnFull.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold text-white/85 hover:text-white transition cursor-pointer';
+      } else {
+        img.src = currentProfile.fullBodyUrl;
+        btnFull.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
+        btnHead.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold text-white/85 hover:text-white transition cursor-pointer';
+      }
+    }
+
+    // Salin User ID menggunakan document.execCommand('copy') agar aman di iframe/browser
+    function copyUserId() {
+      if (!currentProfile.userId) return;
+      const tempInput = document.createElement('input');
+      tempInput.value = String(currentProfile.userId);
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast(`User ID ${currentProfile.userId} berhasil disalin!`);
+    }
+
+    function showError(title, desc) {
+      document.getElementById('error-title').textContent = title;
+      document.getElementById('error-desc').textContent = desc;
+      document.getElementById('error-box').classList.remove('hidden');
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-text').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2600);
+    }
+  </script>
+</body>
+</html>
